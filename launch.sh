@@ -24,15 +24,15 @@
 ##
 ##       VERSION #  1.0
 ##          DATE #  2017-12-13
-##      REVISION #  G
-##          DATE #  2017-12-22
+##      REVISION #  H
+##          DATE #  2017-12-28
 ##
 #######################################################################
 
 ###### Variables - BEGIN #####
 SCRIPTscript="FiveM Server Console"
 SCRIPTauthor="HUBTEK 'Sébastien HUBER' www.hubtek.fr"
-SCRIPTversion="1.0 Rev G"
+SCRIPTversion="1.0 Rev H"
 
 # COL
 BLUE="\033[01;34m"
@@ -133,11 +133,14 @@ echo "${GREEN}22${RESET}.   ${BOLD}Launching Teamspeak3 Server${RESET}"
 echo ""
 echo "${YELLOW}${BOLD}********** Others **********${RESET}"
 echo ""
+echo "${GREEN}${BOLD} 901${RESET}. ${BOLD}Show process monitoring${RESET}"
+echo ""
 echo "${RED}${BOLD}1000${RESET}. ${BOLD}Reboot the entire server${RESET}"
 echo ""
-echo "${GREEN}${BOLD}U${RESET}.    ${BOLD}Updating the script${RESET}"
+echo "${GREEN}${BOLD}   U${RESET}.    ${BOLD}Updating the script${RESET}"
 echo ""
-echo "${RESET}${BOLD}Q.    Quit this script${RESET}"
+echo ""
+echo "${RESET}${BOLD}   Q${RESET}.    ${BOLD}Quit this script${RESET}"
 echo ""
 read -p ": " ScriptToDo
 echo ""
@@ -173,7 +176,7 @@ case $ScriptToDo in
       cd /home/fivem/server/server-data && rm cache/ -R
       sleep 3
       screen -dm -S fivem
-      screen -x fivem -X stuff 'bash /home/fivem/fivem.sh
+      screen -x fivem -X stuff 'bash /home/fivem/hubtek/scripts/fivem/fivem.sh
       '
       sleep 1
       ScriptToDo;;
@@ -211,6 +214,12 @@ case $ScriptToDo in
       screen -x fivem -X stuff "say $MessageToSend
       "
       ScriptToDo;;
+    901)
+      header
+      echo "Do 'F10' for leaving the monitoring"
+      sleep 2
+      sudo htop
+      ScriptToDo;;
     1000)
       header
       sudo shutdown 0 -r
@@ -218,12 +227,12 @@ case $ScriptToDo in
     u|U)
       header
       echo "${GREEN}"
-      git clone https://github.com/hubtek/fivem.git /home/fivem/hubtek/scripts/fivem/
-      echo "${RESET}"
-      echo "${RED}Please relaunch your 'console'"
-      echo "${RESET}"
-      sleep 5
-      exit 0;;
+      rm -rf /home/fivem/hubtek/scripts/fivem/
+      #cd /home/fivem/hubtek/scripts
+      sleep 1
+      git clone https://github.com/hubtek/fivem /home/fivem/hubtek/scripts/fivem/
+      sh /home/fivem/hubtek/scripts/fivem/launch.sh
+      ;;
     Q|q|quit)
       clear
       sleep 1
