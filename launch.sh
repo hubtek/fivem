@@ -24,7 +24,7 @@
 ##
 ##       VERSION #  1.0
 ##          DATE #  2017-12-13
-##      REVISION #  N
+##      REVISION #  O
 ##          DATE #  2017-12-31
 ##
 #######################################################################
@@ -32,7 +32,7 @@
 ###### Variables - BEGIN #####
 SCRIPTscript="FiveM Server Console"
 SCRIPTauthor="HUBTEK 'Sébastien HUBER' www.hubtek.fr"
-SCRIPTversion="1.0 Rev N"
+SCRIPTversion="1.0 Rev O"
 
 # Some
 DATE=`date +%Y-%m-%d_%H-%M-%S`
@@ -114,8 +114,8 @@ backup_files() {
   sleep 1
   echo "Copying server files ..."
   DATE=`date +%Y-%m-%d_%H-%M-%S`
-  mkdir -p $FivemBackupDirectory/$DATE/ &> /dev/null
-  cd $FivemDirectory && tar -cf $FivemBackupDirectory/$DATE/files.tar ./* &> /dev/null
+  mkdir -p $FivemBackupDirectory/$DATE/
+  cd $FivemDirectory && tar -cf $FivemBackupDirectory/$DATE/files.tar ./*
   sleep 1
   header
 }
@@ -128,15 +128,18 @@ backup_sql() {
   echo "\n\n"
   echo "Dumping the database ..."
   sleep 1
-  mysqldump --user=$mysqluser --password=$mysqlpassword --host=localhost $mysqldbname > $FivemBackupDirectory/$DATE/$mysqldbname.sql &> /dev/null
+  mysqldump --user=$mysqluser --password=$mysqlpassword --host=localhost $mysqldbname > $FivemBackupDirectory/$DATE/$mysqldbname.sql
   sleep 2
   clear
 }
 backup_verify() {
   header
-  echo "${YELLOW}Please control the presence and size of the files below  ...${RESET}"
-  ls -lh $FivemBackupDirectory/$DATE/
-  sleep 12
+  echo "${YELLOW}Please control the presence and size of the files below  ...${RESET}\n\n"
+  echo "${BOLD}--${RESET} Original directory ${BOLD}--${RESET}"
+  echo "$FivemDirectory" && ls -lh $FivemDirectory
+  echo "\n\n${BOLD}--${RESET} Backup directory ${BOLD}--${RESET}"
+  echo "$FivemBackupDirectory/$DATE/" && ls -lh $FivemBackupDirectory/$DATE/
+  sleep 10
 }
 
 fivem_stop() {
@@ -145,21 +148,27 @@ fivem_stop() {
   '
   echo "standby for 5 seconds ..."
   sleep 3
-  kill -9 `ps -ef | grep "$FivemDirectory/proot" | grep -v grep | awk '{print $2}'` &> /dev/null
+  kill -9 `ps -ef | grep "$FivemDirectory/proot" | grep -v grep | awk '{print $2}'`
   header
   sleep 1
   pkill screen
   header
   cd $FivemDirectoryServerData
-  rm cache/ -R &> /dev/null
+  rm cache/ -Rf
 }
 fivem_start() {
   header
   fivem_stop
   sleep 3
-  screen -dm -S fivem &> /dev/null
+  screen -dm -S fivem
+  sleep 1
   screen -x fivem -X stuff "bash $FileFiveM
   "
+  sleep 1
+}
+download_fx() {
+  header
+  wget $fxUrl
   sleep 1
 }
 
@@ -233,7 +242,7 @@ ListScript
 
 case $ScriptToDo in
     0)
-      screen -r fivem &> /dev/null
+      screen -r fivem
       ScriptToDo;;
     1)
       fivem_stop
@@ -292,10 +301,10 @@ case $ScriptToDo in
     u|U)
       header
       echo ""
-      rm -rf $ScriptDirectoryHubtek/scripts/fivem/ &> /dev/null
+      rm -rf $ScriptDirectoryHubtek/scripts/fivem/
       clear
       sleep 1
-      mkdir -p $ScriptDirectoryHubtek/scripts/fivem/ &> /dev/null
+      mkdir -p $ScriptDirectoryHubtek/scripts/fivem/
       git clone https://github.com/hubtek/fivem $ScriptDirectoryHubtek/scripts/fivem/
       clear
       sh $FileLaunch
@@ -314,7 +323,7 @@ case $ScriptToDo in
       backup_sql
       header
       fivem_stop
-      cd $FivemBackupDirectory &> /dev/null
+      cd $FivemBackupDirectory
       header
       echo "${YELLOW}Choosing the backup that you want to restore ...${RESET}\n"
       echo "${BLUE}" && ls -Xx && echo "${RESET}\n"
@@ -323,15 +332,15 @@ case $ScriptToDo in
       echo "\n${YELLOW}We can now procede to your restore ...${RESET}\n"
       echo "${YELLOW}Launching the restore sequence for your database ...${RESET}\n"
       echo "${YELLOW}Please type 'y' to the question ...${RESET}\n"
-      mysqladmin drop $mysqldbname -u $mysqluser -p$mysqlpassword &> /dev/null
-      mysqladmin create $mysqldbname -u $mysqluser -p$mysqlpassword &> /dev/null
-      mysql -u $mysqluser --password=$mysqlpassword $mysqldbname < fivem.sql &> /dev/null
+      mysqladmin drop $mysqldbname -u $mysqluser -p$mysqlpassword
+      mysqladmin create $mysqldbname -u $mysqluser -p$mysqlpassword
+      mysql -u $mysqluser --password=$mysqlpassword $mysqldbname < fivem.sql
       echo "\n${YELLOW}Launching the restore sequence for your files ...${RESET}\n"
-      rm -rf $FivemDirectory &> /dev/null
-      mkdir -p $FivemDirectory && cp $FivemBackupDirectory/$restoreName/files.tar $FivemDirectory && cd $FivemDirectory && tar xf files.tar && rm files.tar &> /dev/null
+      rm -rf $FivemDirectory
+      mkdir -p $FivemDirectory && cp $FivemBackupDirectory/$restoreName/files.tar $FivemDirectory && cd $FivemDirectory && tar xf files.tar && rm files.tar
       fivem_start
       ScriptToDo;;
-    fx|FX|305) #Download and extract the FX version of user choice
+    fx|FX) #Download and extract the FX version of user choice
       header
       echo ""
       echo "-- https://runtime.fivem.net/artifacts/fivem/build_proot_linux/master/\n"
@@ -341,14 +350,20 @@ case $ScriptToDo in
       echo "${YELLOW}Launching a backup of your fivem ...${RESET}\n"
       backup_files
       backup_sql
-      mkdir -p $FivemDirectory &> /dev/null
-      cd $FivemDirectory && wget $fxUrl &> /dev/null
-      tar xf fx.tar.xz &> /dev/null
-      rm fx.tar.xz &> /dev/null
-      mkdir -p $FivemDirectory/server-data &> /dev/null
+      mkdir -p $FivemDirectory
+      cd $FivemDirectory
+      rm fx.tar.xz
+      download_fx
+      clear
+      tar xf fx.tar.xz
+      clear
+      mkdir -p $FivemDirectory/server-data
       git clone https://github.com/citizenfx/cfx-server-data.git /tmp/server-data
-      cp -rf /tmp/server-data/* $FivemDirectory/server-data/ &> /dev/null
-      rm -rf /tmp/server-data &> /dev/null
+      clear
+      cp -rf /tmp/server-data/* $FivemDirectory/server-data/
+      rm -rf /tmp/server-data
+      clear
+      # TODO Add an option for temporary backup and adding again the server.cfg and ressources to the new folder
       ScriptToDo;;
     Q|q|quit)
       clear
@@ -356,7 +371,7 @@ case $ScriptToDo in
       clear
       exit 0
       ;;
-    0|V|v)
+    0|V|v|305)
       echo "${RED}Feature not implemented yet in this script.${RESET}"
       ScriptToDo;;
     *)
