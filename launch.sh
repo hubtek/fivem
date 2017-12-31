@@ -24,7 +24,7 @@
 ##
 ##       VERSION #  1.0
 ##          DATE #  2017-12-13
-##      REVISION #  M
+##      REVISION #  N
 ##          DATE #  2017-12-31
 ##
 #######################################################################
@@ -114,8 +114,8 @@ backup_files() {
   sleep 1
   echo "Copying server files ..."
   DATE=`date +%Y-%m-%d_%H-%M-%S`
-  mkdir -p $FivemBackupDirectory/$DATE/
-  cd $FivemDirectory && tar -cf $FivemBackupDirectory/$DATE/files.tar ./*
+  mkdir -p $FivemBackupDirectory/$DATE/ &> /dev/null
+  cd $FivemDirectory && tar -cf $FivemBackupDirectory/$DATE/files.tar ./* &> /dev/null
   sleep 1
   header
 }
@@ -128,7 +128,7 @@ backup_sql() {
   echo "\n\n"
   echo "Dumping the database ..."
   sleep 1
-  mysqldump --user=$mysqluser --password=$mysqlpassword --host=localhost $mysqldbname > $FivemBackupDirectory/$DATE/$mysqldbname.sql
+  mysqldump --user=$mysqluser --password=$mysqlpassword --host=localhost $mysqldbname > $FivemBackupDirectory/$DATE/$mysqldbname.sql &> /dev/null
   sleep 2
   clear
 }
@@ -145,18 +145,19 @@ fivem_stop() {
   '
   echo "standby for 5 seconds ..."
   sleep 3
-  kill -9 `ps -ef | grep "$FivemDirectory/proot" | grep -v grep | awk '{print $2}'`
+  kill -9 `ps -ef | grep "$FivemDirectory/proot" | grep -v grep | awk '{print $2}'` &> /dev/null
   header
   sleep 1
   pkill screen
   header
-  cd $FivemDirectoryServerData && rm cache/ -R
+  cd $FivemDirectoryServerData
+  rm cache/ -R &> /dev/null
 }
 fivem_start() {
   header
   fivem_stop
   sleep 3
-  screen -dm -S fivem
+  screen -dm -S fivem &> /dev/null
   screen -x fivem -X stuff "bash $FileFiveM
   "
   sleep 1
@@ -232,7 +233,7 @@ ListScript
 
 case $ScriptToDo in
     0)
-      screen -r fivem
+      screen -r fivem &> /dev/null
       ScriptToDo;;
     1)
       fivem_stop
@@ -291,9 +292,10 @@ case $ScriptToDo in
     u|U)
       header
       echo ""
-      rm -rf $ScriptDirectoryHubtek/scripts/fivem/
+      rm -rf $ScriptDirectoryHubtek/scripts/fivem/ &> /dev/null
       clear
       sleep 1
+      mkdir -p $ScriptDirectoryHubtek/scripts/fivem/ &> /dev/null
       git clone https://github.com/hubtek/fivem $ScriptDirectoryHubtek/scripts/fivem/
       clear
       sh $FileLaunch
@@ -312,7 +314,7 @@ case $ScriptToDo in
       backup_sql
       header
       fivem_stop
-      cd $FivemBackupDirectory
+      cd $FivemBackupDirectory &> /dev/null
       header
       echo "${YELLOW}Choosing the backup that you want to restore ...${RESET}\n"
       echo "${BLUE}" && ls -Xx && echo "${RESET}\n"
@@ -321,12 +323,12 @@ case $ScriptToDo in
       echo "\n${YELLOW}We can now procede to your restore ...${RESET}\n"
       echo "${YELLOW}Launching the restore sequence for your database ...${RESET}\n"
       echo "${YELLOW}Please type 'y' to the question ...${RESET}\n"
-      mysqladmin drop $mysqldbname -u $mysqluser -p$mysqlpassword
-      mysqladmin create $mysqldbname -u $mysqluser -p$mysqlpassword
-      mysql -u $mysqluser --password=$mysqlpassword $mysqldbname < fivem.sql
+      mysqladmin drop $mysqldbname -u $mysqluser -p$mysqlpassword &> /dev/null
+      mysqladmin create $mysqldbname -u $mysqluser -p$mysqlpassword &> /dev/null
+      mysql -u $mysqluser --password=$mysqlpassword $mysqldbname < fivem.sql &> /dev/null
       echo "\n${YELLOW}Launching the restore sequence for your files ...${RESET}\n"
-      rm -rf $FivemDirectory
-      mkdir -p $FivemDirectory && cp $FivemBackupDirectory/$restoreName/files.tar $FivemDirectory && cd $FivemDirectory && tar xf files.tar && rm files.tar
+      rm -rf $FivemDirectory &> /dev/null
+      mkdir -p $FivemDirectory && cp $FivemBackupDirectory/$restoreName/files.tar $FivemDirectory && cd $FivemDirectory && tar xf files.tar && rm files.tar &> /dev/null
       fivem_start
       ScriptToDo;;
     fx|FX|305) #Download and extract the FX version of user choice
@@ -339,14 +341,14 @@ case $ScriptToDo in
       echo "${YELLOW}Launching a backup of your fivem ...${RESET}\n"
       backup_files
       backup_sql
-      mkdir -p $FivemDirectory
-      cd $FivemDirectory && wget $fxUrl
-      tar xf fx.tar.xz
-      rm fx.tar.xz
-      mkdir -p $FivemDirectory/server-data
+      mkdir -p $FivemDirectory &> /dev/null
+      cd $FivemDirectory && wget $fxUrl &> /dev/null
+      tar xf fx.tar.xz &> /dev/null
+      rm fx.tar.xz &> /dev/null
+      mkdir -p $FivemDirectory/server-data &> /dev/null
       git clone https://github.com/citizenfx/cfx-server-data.git /tmp/server-data
-      cp -rf /tmp/server-data/* $FivemDirectory/server-data/
-      rm -rf /tmp/server-data
+      cp -rf /tmp/server-data/* $FivemDirectory/server-data/ &> /dev/null
+      rm -rf /tmp/server-data &> /dev/null
       ScriptToDo;;
     Q|q|quit)
       clear
