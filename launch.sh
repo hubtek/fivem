@@ -301,11 +301,11 @@ case $ScriptToDo in
     u|U)
       header
       echo ""
-      rm -rf $ScriptDirectoryHubtek/scripts/fivem/
+      rm -rf $ScriptDirectoryHubtek
       clear
       sleep 1
-      mkdir -p $ScriptDirectoryHubtek/scripts/fivem/
-      git clone https://github.com/hubtek/fivem $ScriptDirectoryHubtek/scripts/fivem/
+      mkdir -p $ScriptDirectoryHubtek
+      git clone https://github.com/hubtek/fivem $ScriptDirectoryHubtek
       clear
       sh $FileLaunch
       ;;
