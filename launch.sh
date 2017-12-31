@@ -32,7 +32,7 @@
 ###### Variables - BEGIN #####
 SCRIPTscript="FiveM Server Console"
 SCRIPTauthor="HUBTEK 'Sébastien HUBER' www.hubtek.fr"
-SCRIPTversion="1.0 Rev J"
+SCRIPTversion="1.0 Rev N"
 
 # Some
 DATE=`date +%Y-%m-%d_%H-%M-%S`
