@@ -22,9 +22,9 @@ A little script with a menu to help you to navigate through the diffent function
 
 Usage on an linux hubtek template server
 
-`<rm -rf /home/fivem/hubtek/scripts/fivem && mkdir -p /home/fivem/hubtek/scripts/fivem && git clone https://github.com/hubtek/fivem.git /home/fivem/hubtek/scripts/fivem/ && chmod +x /home/fivem/hubtek/scripts/fivem/launch.sh>`
+`rm -rf /home/fivem/hubtek/scripts/fivem && mkdir -p /home/fivem/hubtek/scripts/fivem && git clone https://github.com/hubtek/fivem.git /home/fivem/hubtek/scripts/fivem/ && chmod +x /home/fivem/hubtek/scripts/fivem/launch.sh`
 
-`<sh /home/fivem/hubtek/scripts/fivem/launch.sh>`
+`sh /home/fivem/hubtek/scripts/fivem/launch.sh`
 
 Don't hesite to make an alias for launching the script from a simple command.
 
