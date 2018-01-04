@@ -17,14 +17,14 @@
 ##       OPTIONS #  ---
 ##  REQUIREMENTS #  ---
 ##          BUGS #  ---
-##         NOTES #  ---
+##         NOTES #  This version allow you to close FiveM server on some case to protect your server to be corruputd
 ##
 ##        AUTHOR #  'Sébastien HUBER' sebastien@hubtek.fr
 ##       COMPANY #  HUBTEK
 ##
-##       VERSION #  1.0
+##       VERSION #  1.1
 ##          DATE #  2017-12-13
-##      REVISION #  O
+##      REVISION #  A
 ##          DATE #  2017-12-31
 ##
 #######################################################################
@@ -32,7 +32,7 @@
 ###### Variables - BEGIN #####
 SCRIPTscript="FiveM Server Console"
 SCRIPTauthor="HUBTEK 'Sébastien HUBER' www.hubtek.fr"
-SCRIPTversion="1.0 Rev O"
+SCRIPTversion="1.1 Rev A"
 
 # Some
 DATE=`date +%Y-%m-%d_%H-%M-%S`
@@ -71,12 +71,15 @@ space() {
 }
 
 FakeProgression() {
-echo "..."
-sleep 1
-echo "... ..."
-sleep 1
-echo "... ... ..."
-sleep 1
+  echo ""
+  echo "Please standby"
+  echo ""
+  echo "..."
+  sleep 1
+  echo "... ..."
+  sleep 1
+  echo "... ... ..."
+  header
 }
 
 header()
@@ -91,27 +94,18 @@ echo ""
 }
 
 bye() {
-clear
-echo "${RED}Bye"
-sleep 1
-clear
+header
 echo ""
-sleep 1
-clear
 echo "${RED}Bye"
 sleep 1
-clear
-echo ""
-sleep 1
-clear
-echo "${RED}Bye"
-sleep 1
+echo "${RESET}" && clear
 }
 
 backup_files() {
   header
   echo "${YELLOW}Launching the backup sequence for your files ...${RESET}\n"
   sleep 1
+  echo ""
   echo "Copying server files ..."
   DATE=`date +%Y-%m-%d_%H-%M-%S`
   mkdir -p $FivemBackupDirectory/$DATE/
@@ -119,56 +113,87 @@ backup_files() {
   sleep 1
   header
 }
+
 backup_sql() {
   header
   echo "${YELLOW}Launching the backup sequence for your database ...${RESET}\n"
   #read -p "Please enter your SQL DB Name : " mysqldbname
   #read -p "Please enter your SQL Username : " mysqluser
   read -p "Please enter your SQL Password : " mysqlpassword
-  echo "\n\n"
+  header
   echo "Dumping the database ..."
   sleep 1
   mysqldump --user=$mysqluser --password=$mysqlpassword --host=localhost $mysqldbname > $FivemBackupDirectory/$DATE/$mysqldbname.sql
   sleep 2
-  clear
 }
+
 backup_verify() {
   header
   echo "${YELLOW}Please control the presence and size of the files below  ...${RESET}\n\n"
-  echo "${BOLD}--${RESET} Original directory ${BOLD}--${RESET}"
-  echo "$FivemDirectory" && ls -lh $FivemDirectory
-  echo "\n\n${BOLD}--${RESET} Backup directory ${BOLD}--${RESET}"
+  echo "${BOLD}--${RESET} Backup directory ${BOLD}--${RESET}"
   echo "$FivemBackupDirectory/$DATE/" && ls -lh $FivemBackupDirectory/$DATE/
   sleep 10
 }
 
 fivem_stop() {
   header
+  if [ "$fivemState" = "Running" ]
+  then
   screen -x fivem -X stuff 'say THE SERVER WILL STOP IN 5 SECONDS ...
   '
-  echo "standby for 5 seconds ..."
-  sleep 3
+  header
+  FakeProgression
   kill -9 `ps -ef | grep "$FivemDirectory/proot" | grep -v grep | awk '{print $2}'`
   header
-  sleep 1
+  FakeProgression
   pkill screen
   header
   cd $FivemDirectoryServerData
   rm cache/ -Rf
+  header
+  FakeProgression
+  else
+  fivem_show_state
+  FakeProgression
+  fi
 }
+
 fivem_start() {
   header
+  fivem_state
+  if [ "$fivemState" = "Running" ]
+  then
+  fivem_show_state
+  else
   fivem_stop
-  sleep 3
+  header && FakeProgression && sleep 2
   screen -dm -S fivem
-  sleep 1
+  header && FakeProgression && sleep 2
   screen -x fivem -X stuff "bash $FileFiveM
   "
-  sleep 1
+  header
+  fivem_show_state
+  fi
 }
+
+fivem_state() {
+  netstat -an | grep 30120 >> /dev/null
+  if [ "$?" = "0" ]
+  then
+  fivemState="Running"
+  else
+  fivemState="Down"
+  fi
+}
+
+fivem_show_state() {
+  fivem_state
+  echo "Your FiveM server is actually ${YELLOW}$fivemState${RESET}"
+}
+
 download_fx() {
   header
-  wget $fxUrl
+  wget $fxUrl # TODO : Helping from https://github.com/TomGrobbe/Linux-FX-Download-Script/blob/master/fx-downloader/fx-downloader.sh
   sleep 1
 }
 
@@ -188,8 +213,16 @@ echo ""
 echo "${RED}${BOLD}**** I cannot guarantee a functional script on other server than an hubtek server ****${RESET}"
 sleep 2
 
+
 ListScript() {
 header
+echo "${BOLD}"
+fivem_show_state
+echo "* Type 'ENTER' to refresh this menu"
+echo ""
+echo "${BOLD}LEGEND${RESET}"
+echo "${RED}RED  ${RESET} Your FiveM server will close"
+echo "${GREEN}GREEN${RESET} Your FiveM server don't occur any risk"
 echo ""
 echo "${YELLOW}${BOLD}********** FIVEM **********${RESET}"
 echo ""
@@ -198,6 +231,7 @@ echo "${RESET}       * Inside the 'screen' Please do 'CTRL+A+D' for leaving prop
 echo ""
 echo "${RED}   1${RESET}. ${BOLD}Stopping FiveM Server${RESET}"
 echo "${GREEN}   2${RESET}. ${BOLD}Launching FiveM Server${RESET}"
+echo "${RED}   3${RESET}. ${BOLD}Restarting FiveM Server${RESET}"
 echo ""
 echo "${GREEN}${BOLD}   5${RESET}. ${BOLD}Send a console message to the server${RESET}"
 echo ""
@@ -241,32 +275,36 @@ sleep 3
 ListScript
 
 case $ScriptToDo in
-    0)
+    0) # Go to actual 'screen' FiveM Server session (if exists)
       screen -r fivem
+      clear
       ScriptToDo;;
-    1)
+    1) # Stopping FiveM Server
       fivem_stop
-      header
       ScriptToDo;;
-    2)
-      header
-      fivem_stop
-      header
+    2) # Launching FiveM Server
       fivem_start
       ScriptToDo;;
-    11)
+    3) # Restarting FiveM Server
+      fivem_stop
+      sleep 5 && FakeProgression && sleep 5
+      fivem_start
+      ScriptToDo;;
+    11) # Stopping SQL Server
       header
       echo "${RED}Stopping SQL Server ...${RESET}"
+      fivem_stop
       sudo service mysql stop
       ScriptToDo;;
-    12)
+    12) # Starting SQL Server
       header
       echo "${GREEN}Starting SQL Server ...${RESET}"
       sudo service mysql start #service mysql restart work too
       ScriptToDo;;
-    13)
+    13) #  Restarting SQL Server
       header
       echo "${RED}Restarting SQL Server ...${RESET}"
+      fivem_stop
       sudo service mysql restart #service mysql restart work too
       ScriptToDo;;
     21)
@@ -302,11 +340,11 @@ case $ScriptToDo in
       header
       echo ""
       rm -rf $ScriptDirectoryHubtek
-      clear
+      header
       sleep 1
       mkdir -p $ScriptDirectoryHubtek
       git clone https://github.com/hubtek/fivem $ScriptDirectoryHubtek
-      clear
+      header
       sh $FileLaunch
       ;;
     s|S|301) #Save/Backup files & SQL
@@ -337,7 +375,7 @@ case $ScriptToDo in
       mysql -u $mysqluser --password=$mysqlpassword $mysqldbname < fivem.sql
       echo "\n${YELLOW}Launching the restore sequence for your files ...${RESET}\n"
       rm -rf $FivemDirectory
-      mkdir -p $FivemDirectory && cp $FivemBackupDirectory/$restoreName/files.tar $FivemDirectory && cd $FivemDirectory && tar xf files.tar && rm files.tar
+      mkdir -p $FivemDirectory && cp $FivemBackupDirectory/$restoreName/files.tar $FivemDirectory && cd $FivemDirectory && tar xf files.tar && rm -rf files.tar
       fivem_start
       ScriptToDo;;
     fx|FX) #Download and extract the FX version of user choice
@@ -352,7 +390,7 @@ case $ScriptToDo in
       backup_sql
       mkdir -p $FivemDirectory
       cd $FivemDirectory
-      rm fx.tar.xz
+      rm -rf fx.tar.xz
       download_fx
       clear
       tar xf fx.tar.xz
@@ -366,16 +404,14 @@ case $ScriptToDo in
       # TODO Add an option for temporary backup and adding again the server.cfg and ressources to the new folder
       ScriptToDo;;
     Q|q|quit)
-      clear
       bye
-      clear
       exit 0
       ;;
     0|V|v|305)
       echo "${RED}Feature not implemented yet in this script.${RESET}"
       ScriptToDo;;
     *)
-      echo "${RED}Invalid choice, please read the list and type the script that you want to run${RESET}"
+      echo "${RED}Invalid choice, please read the list and type number of the command that you want to run${RESET}"
       ScriptToDo;;
 esac
 }
