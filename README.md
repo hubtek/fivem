@@ -2,7 +2,7 @@
 
 A little script with a menu to help you to navigate through the diffent functions
 
-![Menu](https://hubtek.fr/images/fivem-console-screen-menu-0.png)
+
 
 ## Functions
 
