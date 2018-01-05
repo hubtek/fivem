@@ -20,7 +20,7 @@ A little script with a menu to help you to navigate through the diffent function
 
 ## Usage
 
-Usage on an linux hubtek template server
+Usage on an linux hubtek template server.
 
 `rm -rf /home/fivem/hubtek/scripts/fivem && mkdir -p /home/fivem/hubtek/scripts/fivem && git clone https://github.com/hubtek/fivem.git /home/fivem/hubtek/scripts/fivem/ && chmod +x /home/fivem/hubtek/scripts/fivem/launch.sh`
 
