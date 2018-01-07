@@ -17,14 +17,14 @@
 ##       OPTIONS #  ---
 ##  REQUIREMENTS #  ---
 ##          BUGS #  ---
-##         NOTES #  This version allow you to close FiveM server on some case to protect your server to be corruputd
+##         NOTES #  ---
 ##
 ##        AUTHOR #  'Sébastien HUBER' sebastien@hubtek.fr
 ##       COMPANY #  HUBTEK
 ##
 ##       VERSION #  1.1
 ##          DATE #  2017-12-13
-##      REVISION #  A
+##      REVISION #  B
 ##          DATE #  2017-12-31
 ##
 #######################################################################
@@ -32,7 +32,7 @@
 ###### Variables - BEGIN #####
 SCRIPTscript="FiveM Server Console"
 SCRIPTauthor="HUBTEK 'Sébastien HUBER' www.hubtek.fr"
-SCRIPTversion="1.1 Rev A"
+SCRIPTversion="1.1 Rev B"
 
 # Some
 DATE=`date +%Y-%m-%d_%H-%M-%S`
@@ -186,6 +186,25 @@ fivem_state() {
   fi
 }
 
+fivem_say() {
+header
+fivem_state
+if [ "$fivemState" = "Running" ]
+then
+  echo ""
+  echo "***** Say something to your console server *****"
+  echo ""
+  read -p "type your text and type 'ENTER' to send it : " MessageToSend
+  screen -x fivem -X stuff "say $MessageToSend
+  "
+else
+echo "Nothing to do ...\n"
+echo "Your FiveM server need to be in running state ...\n"
+fivem_show_state
+sleep 2
+fi
+}
+
 fivem_show_state() {
   fivem_state
   echo "Your FiveM server is actually ${YELLOW}$fivemState${RESET}"
@@ -252,10 +271,10 @@ echo "${GREEN} 301${RESET}. ${BOLD}Saving/Backup the files & SQL${RESET}"
 echo "${RED} 302${RESET}. ${BOLD}Restoring a backup for the files & SQL${RESET}"
 echo "${RESET}       * This one will stop your Fivem server for several seconds${RESET}"
 echo ""
-echo "${RED} 305${RESET}. ${BOLD}Updating the artifact and the 'server-data' folder${RESET}"
-echo "${RESET}       * This one will stop your Fivem server for several seconds${RESET}"
-echo "${RESET}         Also you will need to provide the artifact URL${RESET}"
-echo ""
+##echo "${RED} 305${RESET}. ${BOLD}Updating the artifact and the 'server-data' folder${RESET}"
+##echo "${RESET}       * This one will stop your Fivem server for several seconds${RESET}"
+##echo "${RESET}         Also you will need to provide the artifact URL${RESET}"
+##echo ""
 echo "${GREEN}${BOLD}   U${RESET}. ${BOLD}Updating the script${RESET}"
 echo ""
 echo "${YELLOW}${BOLD}********** Others **********${RESET}"
@@ -266,76 +285,70 @@ echo "${RED}${BOLD}1000${RESET}. ${BOLD}Reboot the entire server${RESET}"
 echo ""
 echo "${RESET}${BOLD}   Q${RESET}. ${BOLD}Quit this script${RESET}"
 echo ""
-read -p ": " ScriptToDo
+read -p ": " menu
 echo ""
 }
 
-ScriptToDo() {
+menu() {
 sleep 3
 ListScript
 
-case $ScriptToDo in
+case $menu in
     0) # Go to actual 'screen' FiveM Server session (if exists)
       screen -r fivem
       clear
-      ScriptToDo;;
+      menu;;
     1) # Stopping FiveM Server
       fivem_stop
-      ScriptToDo;;
+      menu;;
     2) # Launching FiveM Server
       fivem_start
-      ScriptToDo;;
+      menu;;
     3) # Restarting FiveM Server
       fivem_stop
       sleep 5 && FakeProgression && sleep 5
       fivem_start
-      ScriptToDo;;
+      menu;;
     11) # Stopping SQL Server
       header
       echo "${RED}Stopping SQL Server ...${RESET}"
       fivem_stop
       sudo service mysql stop
-      ScriptToDo;;
+      menu;;
     12) # Starting SQL Server
       header
       echo "${GREEN}Starting SQL Server ...${RESET}"
       sudo service mysql start #service mysql restart work too
-      ScriptToDo;;
+      menu;;
     13) #  Restarting SQL Server
       header
       echo "${RED}Restarting SQL Server ...${RESET}"
       fivem_stop
       sudo service mysql restart #service mysql restart work too
-      ScriptToDo;;
+      menu;;
     21)
       header
       echo "${RED}Stopping Teamspeak3 Server ...${RESET}"
       sudo /etc/init.d/teamspeak3-server stop
-      ScriptToDo;;
+      menu;;
     22)
       header
       echo "${GREEN}Starting Teamspeak3 Server ...${RESET}"
       sudo /etc/init.d/teamspeak3-server start
-      ScriptToDo;;
+      menu;;
     5)
-      header
-      echo ""
-      echo "***** Say something to your console server *****"
-      echo ""
-      read -p "type your text and type 'ENTER' to send it : " MessageToSend
-      screen -x fivem -X stuff "say $MessageToSend
-      "
-      ScriptToDo;;
+      fivem_say
+      menu;;
     901)
       header
       echo "Do 'F10' for leaving the monitoring"
       sleep 2
       sudo htop
-      ScriptToDo;;
+      menu;;
     1000)
       header
       sudo shutdown 0 -r
-      ScriptToDo;;
+      menu;;
     u|U)
       header
       echo ""
@@ -352,7 +365,7 @@ case $ScriptToDo in
       backup_files
       backup_sql
       backup_verify
-      ScriptToDo;;
+      menu;;
     r|R|302) #Restore a backup files & SQL
       header
       echo "${YELLOW}I will do a last backup for you, just for security ...\n\n${RESET}"
@@ -377,42 +390,42 @@ case $ScriptToDo in
       rm -rf $FivemDirectory
       mkdir -p $FivemDirectory && cp $FivemBackupDirectory/$restoreName/files.tar $FivemDirectory && cd $FivemDirectory && tar xf files.tar && rm -rf files.tar
       fivem_start
-      ScriptToDo;;
-    fx|FX) #Download and extract the FX version of user choice
-      header
-      echo ""
-      echo "-- https://runtime.fivem.net/artifacts/fivem/build_proot_linux/master/\n"
-      read -p "Please the URL of fx server : " fxUrl
-      echo "${REND}Stopping your Fivem server ...${RESET}\n"
-      fivem_stop
-      echo "${YELLOW}Launching a backup of your fivem ...${RESET}\n"
-      backup_files
-      backup_sql
-      mkdir -p $FivemDirectory
-      cd $FivemDirectory
-      rm -rf fx.tar.xz
-      download_fx
-      clear
-      tar xf fx.tar.xz
-      clear
-      mkdir -p $FivemDirectory/server-data
-      git clone https://github.com/citizenfx/cfx-server-data.git /tmp/server-data
-      clear
-      cp -rf /tmp/server-data/* $FivemDirectory/server-data/
-      rm -rf /tmp/server-data
-      clear
-      # TODO Add an option for temporary backup and adding again the server.cfg and ressources to the new folder
-      ScriptToDo;;
+      menu;;
+#    fx|FX) #Download and extract the FX version of user choice
+#      header
+#      echo ""
+#      echo "-- https://runtime.fivem.net/artifacts/fivem/build_proot_linux/master/\n"
+#      read -p "Please the URL of fx server : " fxUrl
+#      echo "${REND}Stopping your Fivem server ...${RESET}\n"
+#      fivem_stop
+#      echo "${YELLOW}Launching a backup of your fivem ...${RESET}\n"
+#      backup_files
+#      backup_sql
+#      mkdir -p $FivemDirectory
+#      cd $FivemDirectory
+#      rm -rf fx.tar.xz
+#      download_fx
+#      clear
+#      tar xf fx.tar.xz
+#      clear
+#      mkdir -p $FivemDirectory/server-data
+#      git clone https://github.com/citizenfx/cfx-server-data.git /tmp/server-data
+#      clear
+#      cp -rf /tmp/server-data/* $FivemDirectory/server-data/
+#      rm -rf /tmp/server-data
+#      clear
+#      # TODO Add an option for temporary backup and adding again the server.cfg and ressources to the new folder
+#      menu;;
     Q|q|quit)
       bye
       exit 0
       ;;
-    0|V|v|305)
+    0|V|v|305|302)
       echo "${RED}Feature not implemented yet in this script.${RESET}"
-      ScriptToDo;;
+      menu;;
     *)
       echo "${RED}Invalid choice, please read the list and type number of the command that you want to run${RESET}"
-      ScriptToDo;;
+      menu;;
 esac
 }
-ScriptToDo
+menu
