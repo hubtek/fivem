@@ -23,16 +23,16 @@
 ##       COMPANY #  HUBTEK
 ##
 ##       VERSION #  1.1
-##          DATE #  2017-12-13
-##      REVISION #  B
-##          DATE #  2017-12-31
+##          DATE #  2018-01-04
+##      REVISION #  C
+##          DATE #  2018-01-07
 ##
 #######################################################################
 
 ###### Variables - BEGIN #####
 SCRIPTscript="FiveM Server Console"
 SCRIPTauthor="HUBTEK 'Sébastien HUBER' www.hubtek.fr"
-SCRIPTversion="1.1 Rev B"
+SCRIPTversion="1.1 Rev C"
 
 # Some
 DATE=`date +%Y-%m-%d_%H-%M-%S`
@@ -114,6 +114,20 @@ backup_files() {
   header
 }
 
+backup_files_cleaner() {
+  header
+  ls $FivemBackupDirectory
+  echo "${YELLOW}Removing all your backups ...${RESET}\n"
+  sleep 1
+  echo "Copying server files ..."
+  DATE=`date +%Y-%m-%d_%H-%M-%S`
+  cd $FivemBackupDirectory
+  rm -rf ./*
+  mkdir -p $FivemBackupDirectory
+  ls $FivemBackupDirectory
+  clear
+}
+
 backup_sql() {
   header
   echo "${YELLOW}Launching the backup sequence for your database ...${RESET}\n"
@@ -149,7 +163,7 @@ fivem_stop() {
   pkill screen
   header
   cd $FivemDirectoryServerData
-  rm cache/ -Rf
+  rm -rf cache/
   header
   FakeProgression
   else
@@ -210,11 +224,11 @@ fivem_show_state() {
   echo "Your FiveM server is actually ${YELLOW}$fivemState${RESET}"
 }
 
-download_fx() {
-  header
-  wget $fxUrl # TODO : Helping from https://github.com/TomGrobbe/Linux-FX-Download-Script/blob/master/fx-downloader/fx-downloader.sh
-  sleep 1
-}
+#download_fx() {
+#  header
+#  wget $fxUrl # TODO : Helping from https://github.com/TomGrobbe/Linux-FX-Download-Script/blob/master/fx-downloader/fx-downloader.sh
+#  sleep 1
+#}
 
 
 # Welcome message
@@ -270,6 +284,7 @@ echo ""
 echo "${GREEN} 301${RESET}. ${BOLD}Saving/Backup the files & SQL${RESET}"
 echo "${RED} 302${RESET}. ${BOLD}Restoring a backup for the files & SQL${RESET}"
 echo "${RESET}       * This one will stop your Fivem server for several seconds${RESET}"
+echo "${RED} 303${RESET}. ${BOLD}Remove all your backups${RESET}"
 echo ""
 ##echo "${RED} 305${RESET}. ${BOLD}Updating the artifact and the 'server-data' folder${RESET}"
 ##echo "${RESET}       * This one will stop your Fivem server for several seconds${RESET}"
@@ -390,6 +405,10 @@ case $menu in
       rm -rf $FivemDirectory
       mkdir -p $FivemDirectory && cp $FivemBackupDirectory/$restoreName/files.tar $FivemDirectory && cd $FivemDirectory && tar xf files.tar && rm -rf files.tar
       fivem_start
+      menu;;
+    303) # Removing all your backups
+      header
+      backup_files_cleaner
       menu;;
 #    fx|FX) #Download and extract the FX version of user choice
 #      header
