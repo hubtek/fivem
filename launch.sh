@@ -24,7 +24,7 @@
 ##
 ##       VERSION #  1.1
 ##          DATE #  2018-01-04
-##      REVISION #  C
+##      REVISION #  E
 ##          DATE #  2018-01-07
 ##
 #######################################################################
@@ -32,7 +32,7 @@
 ###### Variables - BEGIN #####
 SCRIPTscript="FiveM Server Console"
 SCRIPTauthor="HUBTEK 'Sébastien HUBER' www.hubtek.fr"
-SCRIPTversion="1.1 Rev C"
+SCRIPTversion="1.1 Rev E"
 
 # Some
 DATE=`date +%Y-%m-%d_%H-%M-%S`
@@ -54,7 +54,6 @@ ScriptDirectoryFiveM="$ScriptDirectoryHubtek/fivem"
 
 FivemDirectory="/home/fivem/server"
 FivemDirectoryServerData="$FivemDirectory/server-data"
-FivemBackupDirectory="/home/fivem/backup"
 
 FileLaunch="$ScriptDirectoryHubtek/launch.sh"
 chmod +x $FileLaunch
@@ -98,29 +97,54 @@ header
 echo ""
 echo "${RED}Bye"
 sleep 1
+echo "${RED}Bye"
+sleep 1
+echo "${RED}Bye"
+sleep 1
+echo "${RED}Bye"
 echo "${RESET}" && clear
 }
 
 backup_files() {
   header
+  backupName="noname"
+  echo "${BOLD}You can give a name at your backup if you want to ...${RESET}"
+  echo "If you don't want to give him a name you can just type enter."
+  echo ""
+  read -p "Please enter a name for your backup : " backupName
+  sleep 2
+  header
   echo "${YELLOW}Launching the backup sequence for your files ...${RESET}\n"
   sleep 1
   echo ""
   echo "Copying server files ..."
-  DATE=`date +%Y-%m-%d_%H-%M-%S`
-  mkdir -p $FivemBackupDirectory/$DATE/
-  cd $FivemDirectory && tar -cf $FivemBackupDirectory/$DATE/files.tar ./*
+  DATE=`date +%Y-%m-%d_%H%M%S`
+  FivemBackupDirectory="/home/fivem/backup"
+  FivemBackupDirectory=$FivemBackupDirectory/$DATE-$backupName
+  mkdir -p $FivemBackupDirectory
+  cd $FivemDirectory && tar -cf $FivemBackupDirectory/files.tar ./*
   sleep 1
   header
 }
 
+backup_sql() {
+  header
+  echo "${YELLOW}Launching the backup sequence for your database ...${RESET}\n"
+  read -p "Please enter your SQL Password : " mysqlpassword
+  header
+  echo "Dumping the database ..."
+  sleep 1
+  mysqldump --user=$mysqluser --password=$mysqlpassword --host=localhost $mysqldbname > $FivemBackupDirectory/$mysqldbname.sql
+  sleep 2
+}
+
 backup_files_cleaner() {
   header
+  FivemBackupDirectory="/home/fivem/backup"
   ls $FivemBackupDirectory
   echo "${YELLOW}Removing all your backups ...${RESET}\n"
   sleep 1
   echo "Copying server files ..."
-  DATE=`date +%Y-%m-%d_%H-%M-%S`
   cd $FivemBackupDirectory
   rm -rf ./*
   mkdir -p $FivemBackupDirectory
@@ -128,24 +152,11 @@ backup_files_cleaner() {
   clear
 }
 
-backup_sql() {
-  header
-  echo "${YELLOW}Launching the backup sequence for your database ...${RESET}\n"
-  #read -p "Please enter your SQL DB Name : " mysqldbname
-  #read -p "Please enter your SQL Username : " mysqluser
-  read -p "Please enter your SQL Password : " mysqlpassword
-  header
-  echo "Dumping the database ..."
-  sleep 1
-  mysqldump --user=$mysqluser --password=$mysqlpassword --host=localhost $mysqldbname > $FivemBackupDirectory/$DATE/$mysqldbname.sql
-  sleep 2
-}
-
 backup_verify() {
   header
   echo "${YELLOW}Please control the presence and size of the files below  ...${RESET}\n\n"
   echo "${BOLD}--${RESET} Backup directory ${BOLD}--${RESET}"
-  echo "$FivemBackupDirectory/$DATE/" && ls -lh $FivemBackupDirectory/$DATE/
+  echo "$FivemBackupDirectory" && ls -lh $FivemBackupDirectory/
   sleep 10
 }
 
@@ -186,7 +197,7 @@ fivem_start() {
   screen -x fivem -X stuff "bash $FileFiveM
   "
   header
-  fivem_show_state
+  sleep 5
   fi
 }
 
@@ -389,6 +400,7 @@ case $menu in
       backup_sql
       header
       fivem_stop
+      FivemBackupDirectory="/home/fivem/backup"
       cd $FivemBackupDirectory
       header
       echo "${YELLOW}Choosing the backup that you want to restore ...${RESET}\n"
@@ -400,7 +412,8 @@ case $menu in
       echo "${YELLOW}Please type 'y' to the question ...${RESET}\n"
       mysqladmin drop $mysqldbname -u $mysqluser -p$mysqlpassword
       mysqladmin create $mysqldbname -u $mysqluser -p$mysqlpassword
-      mysql -u $mysqluser --password=$mysqlpassword $mysqldbname < fivem.sql
+      mysql -u $mysqluser --password=$mysqlpassword $mysqldbname < $FivemBackupDirectory/$restoreName/fivem.sql
+      header
       echo "\n${YELLOW}Launching the restore sequence for your files ...${RESET}\n"
       rm -rf $FivemDirectory
       mkdir -p $FivemDirectory && cp $FivemBackupDirectory/$restoreName/files.tar $FivemDirectory && cd $FivemDirectory && tar xf files.tar && rm -rf files.tar
