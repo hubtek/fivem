@@ -1,6 +1,6 @@
 # fivem
 
-A little script with a menu to help you to navigate through the diffent functions
+A little script with a menu to help you to navigate through the diffent functions for an hubtek template fivem server
 
 ![Menu](https://hubtek.fr/images/fivem-console-screen-menu-0.png)
 
