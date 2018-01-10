@@ -24,15 +24,15 @@
 ##
 ##       VERSION #  1.1
 ##          DATE #  2018-01-04
-##      REVISION #  E
-##          DATE #  2018-01-07
+##      REVISION #  G
+##          DATE #  2018-01-10
 ##
 #######################################################################
 
 ###### Variables - BEGIN #####
 SCRIPTscript="FiveM Server Console"
 SCRIPTauthor="HUBTEK 'Sébastien HUBER' www.hubtek.fr"
-SCRIPTversion="1.1 Rev E"
+SCRIPTversion="1.1 Rev G"
 
 # Some
 DATE=`date +%Y-%m-%d_%H-%M-%S`
@@ -60,6 +60,12 @@ chmod +x $FileLaunch
 FileFiveM="$ScriptDirectoryHubtek/fivem.sh"
 chmod +x $FileFiveM
 
+# Some Web
+ScriptGithub="https://github.com/hubtek/fivem"
+FiveMFxArtifactURL="https://runtime.fivem.net/artifacts/fivem/build_proot_linux/master/"
+FiveMArchiveName="fx.tar.xz"
+FiveMFxArtifactLastDir="$(curl $FiveMFxArtifactURL | grep '<a href' | tail -1 | awk -F[\>\<] '{print $3}')"
+FiveMFxArtifactLastURLDownloadLink="$FiveMFxArtifactURL$FiveMFxArtifactLastDir$FiveMArchiveName"
 ###### Variables - END #####
 
 
@@ -181,6 +187,25 @@ fivem_stop() {
   fivem_show_state
   FakeProgression
   fi
+}
+
+fivem_stop_force() {
+  header
+  screen -x fivem -X stuff 'say THE SERVER WILL STOP IN 5 SECONDS ...
+  '
+  header
+  FakeProgression
+  kill -9 `ps -ef | grep "$FivemDirectory/proot" | grep -v grep | awk '{print $2}'`
+  header
+  FakeProgression
+  pkill screen
+  header
+  cd $FivemDirectoryServerData
+  rm -rf cache/
+  header
+  FakeProgression
+  fivem_show_state
+  FakeProgression
 }
 
 fivem_start() {
@@ -330,8 +355,8 @@ case $menu in
     2) # Launching FiveM Server
       fivem_start
       menu;;
-    3) # Restarting FiveM Server
-      fivem_stop
+    3) # Restarting FiveM Server  ## Really kill without fivem_stop if anything cause problem like wrong fivem session ..
+      fivem_stop_force
       sleep 5 && FakeProgression && sleep 5
       fivem_start
       menu;;
@@ -382,7 +407,8 @@ case $menu in
       header
       sleep 1
       mkdir -p $ScriptDirectoryHubtek
-      git clone https://github.com/hubtek/fivem $ScriptDirectoryHubtek
+      git clone $ScriptGithub $ScriptDirectoryHubtek
+      chmod +x $ScriptDirectoryHubtek/$FileLaunch && chmod +x $ScriptDirectoryHubtek/$FileFiveM
       header
       sh $FileLaunch
       ;;
@@ -423,7 +449,9 @@ case $menu in
       header
       backup_files_cleaner
       menu;;
-#    fx|FX) #Download and extract the FX version of user choice
+    fx|FX) #Download and extract the FX version of user choice    # Partial Credit to Slluxx on Github - https://github.com/Slluxx/
+
+      tar -xzvf archive.tar.gz -C /tmp
 #      header
 #      echo ""
 #      echo "-- https://runtime.fivem.net/artifacts/fivem/build_proot_linux/master/\n"
