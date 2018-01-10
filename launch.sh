@@ -451,7 +451,7 @@ case $menu in
       menu;;
     fx|FX) #Download and extract the FX version of user choice    # Partial Credit to Slluxx on Github - https://github.com/Slluxx/
 
-      tar -xzvf archive.tar.gz -C /tmp
+      tar -xzvf archive.tar.gz -C /tmp;;
 #      header
 #      echo ""
 #      echo "-- https://runtime.fivem.net/artifacts/fivem/build_proot_linux/master/\n"
